@@ -12,6 +12,18 @@ val builder : String = builder()
 ext["git_version"] = git
 ext["builder"] = builder
 
+// 注册 sourcesJar 任务
+tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+// 配置 Shadow Jar 任务
+tasks.shadowJar {
+    archiveClassifier.set("")
+    minimize()
+}
+
 subprojects {
     apply(plugin = "java")
     apply(plugin = "com.gradleup.shadow")
@@ -65,14 +77,13 @@ publishing {
     repositories {
         mavenLocal()
         }
-    }
     publications {
         create<MavenPublication>("mavenJava") {
             groupId = "net.momirealms"
             artifactId = "custom-fishing"
             version = rootProject.properties["project_version"].toString()
+            artifact(tasks["shadowJar"])
             artifact(tasks["sourcesJar"])
-            from(components["shadow"])
             pom {
                 name = "CustomFishing"
                 url = "https://github.com/Xiao-MoMi/Custom-Fishing"
