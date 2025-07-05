@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.0.0-beta6"
+    id("maven-publish")
 }
 
 val git : String = versionBanner()
