@@ -12,18 +12,6 @@ val builder : String = builder()
 ext["git_version"] = git
 ext["builder"] = builder
 
-// 注册 sourcesJar 任务
-tasks.register<Jar>("sourcesJar") {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
-}
-
-// 配置 Shadow Jar 任务
-tasks.shadowJar {
-    archiveClassifier.set("")
-    minimize()
-}
-
 subprojects {
     apply(plugin = "java")
     apply(plugin = "com.gradleup.shadow")
@@ -82,12 +70,7 @@ publishing {
             groupId = "net.momirealms"
             artifactId = "custom-fishing"
             version = rootProject.properties["project_version"].toString()
-            // 修复：显式声明依赖关系
-            artifact(tasks["shadowJar"]) {
-                // 设置为主构件
-                classifier = null
-            }
-            artifact(tasks["sourcesJar"]) {
+            artifact(tasks["Jar"]) {
                 classifier = "sources"
             }
             pom {
@@ -106,10 +89,7 @@ publishing {
 }
 // 关键修复：显式声明任务依赖关系
 tasks.named("publishMavenJavaPublicationToMavenLocal") {
-    dependsOn(tasks.named("shadowJar"))
-    dependsOn(tasks.named("sourcesJar"))
-}
-tasks.named("jar") {
-    enabled = false
-}
+    dependsOn(tasks.named("Jar"))
+
+
 
