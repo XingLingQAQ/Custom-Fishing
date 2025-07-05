@@ -56,35 +56,4 @@ tasks {
     }
 }
 
-publishing {
-    repositories {
-        maven {
-            url = uri("https://repo.momirealms.net/releases")
-            credentials(PasswordCredentials::class) {
-                username = System.getenv("REPO_USERNAME")
-                password = System.getenv("REPO_PASSWORD")
-            }
-        }
-    }
-    publications {
-        create<MavenPublication>("mavenJava") {
-            groupId = "net.momirealms"
-            artifactId = "custom-fishing"
-            version = rootProject.properties["project_version"].toString()
-            artifact(tasks["sourcesJar"])
-            from(components["shadow"])
-            pom {
-                name = "CustomFishing API"
-                url = "https://github.com/Xiao-MoMi/Custom-Fishing"
-                licenses {
-                    license {
-                        name = "GNU General Public License v3.0"
-                        url = "https://www.gnu.org/licenses/gpl-3.0.html"
-                        distribution = "repo"
-                    }
-                }
-            }
-        }
-    }
-}
 
