@@ -67,11 +67,11 @@ publishing {
         }
     publications {
         create<MavenPublication>("mavenJava") {
+            from(components["java"])
             groupId = "net.momirealms"
             artifactId = "custom-fishing"
             version = rootProject.properties["project_version"].toString()
-            artifact(tasks["Jar"]) {
-                classifier = "sources"
+            artifact(tasks["Jar"]) 
             }
             pom {
                 name = "CustomFishing"
@@ -88,8 +88,9 @@ publishing {
     }
 }
 // 关键修复：显式声明任务依赖关系
-tasks.named("publishMavenJavaPublicationToMavenLocal") {
+tasks.register("publishToMavenLocal") {
     dependsOn(tasks.named("Jar"))
+}
 
 
 
