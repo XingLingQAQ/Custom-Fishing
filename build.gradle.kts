@@ -82,8 +82,14 @@ publishing {
             groupId = "net.momirealms"
             artifactId = "custom-fishing"
             version = rootProject.properties["project_version"].toString()
-            artifact(tasks["shadowJar"])
-            artifact(tasks["sourcesJar"])
+            // 修复：显式声明依赖关系
+            artifact(tasks["shadowJar"]) {
+                // 设置为主构件
+                classifier = null
+            }
+            artifact(tasks["sourcesJar"]) {
+                classifier = "sources"
+            }
             pom {
                 name = "CustomFishing"
                 url = "https://github.com/Xiao-MoMi/Custom-Fishing"
@@ -98,3 +104,9 @@ publishing {
         }
     }
 }
+// 关键修复：显式声明任务依赖关系
+tasks.named("publishMavenJavaPublicationToMavenLocal") {
+    dependsOn(tasks.named("shadowJar"))
+    dependsOn(tasks.named("sourcesJar"))
+}
+
