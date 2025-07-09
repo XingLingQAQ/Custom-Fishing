@@ -1,0 +1,94 @@
+name: customfishing Build
+
+on:
+  push:
+    branches:
+      - main  # 主分支设置为 master
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: 0
+        ref: ${{ github.ref }}
+        
+    - name: Setup JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+        cache: gradle
+
+    - name: Setup JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 21
+        cache: gradle
+
+    - name: Make Gradlew Executable
+      run: chmod +x gradlew
+
+    - name: Build all platforms
+      run: ./gradlew build
+
+    - name: Extract Platforms Version
+      id: extract_version
+      run: |
+        # 检查 gradle.properties 文件是否存在
+        if [ ! -f gradle.properties ]; then
+          echo "::error::gradle.properties file not found!"
+          exit 1
+        fi
+
+        # 提取 project_version 值
+        VERSION=$(grep -E '^project_version\s*=' gradle.properties | cut -d'=' -f2 | xargs)
+        
+        if [ -z "$VERSION" ]; then
+          echo "::error::project_version not found in gradle.properties"
+          exit 1
+        fi
+
+        echo "Found project_version: $VERSION"
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        # 检查版本对应的标签是否存在
+        TAG_NAME="v${{ steps.extract_version.outputs.version }}"
+        if git rev-parse $TAG_NAME >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME already exists"
+          echo "tag_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "Tag $TAG_NAME does not exist, will create it"
+          echo "tag_exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create new tag if not exists
+      if: steps.check_tag.outputs.tag_exists == 'false'
+      run: |
+        # 创建新标签
+        TAG_NAME="v${{ steps.extract_version.outputs.version }}"
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag -a $TAG_NAME -m "Release $TAG_NAME"
+        git push origin $TAG_NAME
+
+     
+    - name: Upload Folders to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: Release V${{ steps.extract_version.outputs.version }}
+        files: |  
+                target/*.jar
+        tag_name: v${{ steps.extract_version.outputs.version }}
+        generate_release_notes: true
+        draft: false
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  
